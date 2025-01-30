@@ -28,8 +28,8 @@ public class OrderTemplate {
     private String orderType;
     private String transactionType;
     private String templateName;
-    private LocalDateTime createDate;
-    private LocalDateTime modifiedDate;
+    private LocalDateTime createDate=LocalDateTime.now();
+    private LocalDateTime modifiedDate=LocalDateTime.now();
     @JsonIgnore
     private Boolean active;
 
