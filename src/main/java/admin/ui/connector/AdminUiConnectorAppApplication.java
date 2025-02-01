@@ -10,6 +10,7 @@ public class AdminUiConnectorAppApplication {
 
 
         SpringApplication.run(AdminUiConnectorAppApplication.class, args);
+        System.out.println("Admin UI Connector App Application Started");
 
     }
 
