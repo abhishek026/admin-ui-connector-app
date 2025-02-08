@@ -1,6 +1,8 @@
 package admin.ui.connector.Controller;
 
 import admin.ui.connector.business.OrderDataService;
+import admin.ui.connector.kiteconnect.KiteClientBusiness;
+import admin.ui.connector.kiteconnect.KiteCredentials;
 import admin.ui.connector.model.Broker;
 import admin.ui.connector.model.OrderPlacement;
 import admin.ui.connector.model.OrderTemplate;
@@ -20,6 +22,9 @@ public class OrderDataController {
 
     @Autowired
     private OrderDataService orderDataService;
+
+    @Autowired
+    private KiteClientBusiness kiteClientBusiness;
 
 
     @GetMapping("/expiry-dates")
@@ -78,5 +83,16 @@ public class OrderDataController {
     public ResponseEntity<?> getBrokerList() {
         List<Broker>  brokers= orderDataService.getBrokerList();
         return ResponseUtil.buildResponse(brokers);
+    }
+
+    @PostMapping("/generateToken")
+    public ResponseEntity<?> generateToken(@RequestBody KiteCredentials credentials) {
+       kiteClientBusiness.generateTokens(credentials);
+        return ResponseUtil.buildResponse(HttpStatus.CREATED,"Token generated successfully!");
+    }
+
+    @GetMapping("/get-active-token-brokers")
+    public List<Broker> getActiveBrokers() {
+        return orderDataService.getActiveTokenBrokers();
     }
 }

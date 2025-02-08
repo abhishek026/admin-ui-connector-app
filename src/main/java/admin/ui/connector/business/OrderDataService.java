@@ -72,6 +72,12 @@ public class OrderDataService {
         return orderDataDao.getActiveBrokers();
     }
 
+    public List<Broker> getActiveTokenBrokers() {
+        return orderDataDao.getActiveTokenBrokers();
+    }
+
+
+
     private void validateOrderTemplates(List<OrderTemplate> orderTemplates) {
         if (orderTemplates == null || orderTemplates.isEmpty()) {
             throw new IllegalArgumentException("Order templates cannot be null or empty");

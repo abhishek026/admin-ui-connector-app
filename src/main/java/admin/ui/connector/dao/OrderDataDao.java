@@ -107,6 +107,29 @@ public class OrderDataDao {
         });
     }
 
+
+    public List<Broker> getActiveTokenBrokers() {
+        String query = "SELECT " +
+                "b.broker_name, " +
+                "b.account, " +
+                "TO_CHAR(b.updated_date, 'DD-Mon-YYYY HH12:MI AM') AS updated_date, " +
+                "'Active' AS token_status " +
+                "FROM brokers b " +
+                "WHERE b.is_active = true " +
+                "AND b.updated_date::DATE = CURRENT_DATE order by account";
+        return jdbcTemplate.query(query, new RowMapper<Broker>() {
+            @Override
+            public Broker mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Broker broker = new Broker();
+                broker.setBrokerName(rs.getString("broker_name"));
+                broker.setAccount(rs.getString("account"));
+                broker.setUpdatedDate(rs.getString("updated_date"));
+                broker.setStatus(rs.getString("token_status"));
+                return broker;
+            }
+        });
+    }
+
     public void saveOrderTemplates(List<OrderTemplate> orderTemplates) {
         String sql = "INSERT INTO order_template (exchange_token, instrument_token, trading_symbol, expiry, expiry_value, " +
                 "strike, inst_type, lot_size, stop_loss, broker, lots, qty, exchange, order_type, transaction_type) " +

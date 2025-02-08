@@ -17,6 +17,8 @@ public class Broker {
     private String publicToken;
     @JsonIgnore
     private String accessToken;
+    private String updatedDate;
+    private String status;
     @JsonIgnore
     private boolean isActive;
 }

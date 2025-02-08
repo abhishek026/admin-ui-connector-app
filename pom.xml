@@ -18,7 +18,7 @@
 	</parent>
 	<groupId>admin-ui-connector-app</groupId>
 	<artifactId>admin-ui-connector-app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>admin-ui-connector-app</name>
 	<description>admin-ui-connector-app</description>
 	<url />
@@ -40,8 +40,8 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>your-library</artifactId>
+			<groupId>kiteconnect</groupId>
+			<artifactId>kiteconnect-library</artifactId>
 			<version>1.0</version>
 			<scope>system</scope>
 			<systemPath>${project.basedir}/src/main/resources/lib/kiteconnect.jar</systemPath>
@@ -80,6 +80,13 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
