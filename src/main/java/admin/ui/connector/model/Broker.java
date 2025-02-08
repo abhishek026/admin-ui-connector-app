@@ -11,12 +11,12 @@ public class Broker {
     private String brokerName;
     private String displayName;
     private String account;
+    @JsonIgnore
     private String brokerUrl;
     @JsonIgnore
-    private String brokerUsername;
-    @JsonIgnore
-    private String brokerPassword;
+    private String publicToken;
     @JsonIgnore
     private String accessToken;
+    @JsonIgnore
     private boolean isActive;
 }

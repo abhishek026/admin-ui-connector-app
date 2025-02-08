@@ -2,6 +2,8 @@ package admin.ui.connector.business;
 
 import admin.ui.connector.dao.OrderDataDao;
 import admin.ui.connector.dao.OrderTemplateDao;
+import admin.ui.connector.model.Broker;
+import admin.ui.connector.model.OrderData;
 import admin.ui.connector.model.OrderPlacement;
 import admin.ui.connector.model.OrderTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +26,20 @@ public class OrderDataService {
         return orderDataDao.getExpiryDates();
     }
 
+
     public OrderPlacement getOrderDataByExpiry(String expiry) {
         OrderPlacement orderPlacement = new OrderPlacement();
-        orderPlacement.setOrderDataList(orderDataDao.getOrderDataByExpiry(expiry));
+
+        List<OrderData> filteredOrderData = orderDataDao.getOrderDataByExpiry(expiry).stream()
+                .filter(order -> order.getLotSize() > 0 || (order.getInstType() != null && !order.getInstType().isEmpty()))
+                .collect(Collectors.toList());
+
+        orderPlacement.setOrderDataList(filteredOrderData);
         orderPlacement.setBrokers(orderDataDao.getActiveBrokers());
+
         return orderPlacement;
     }
+
 
     public void saveOrderTemplate(List<OrderTemplate> orderTemplates) {
         validateOrderTemplates(orderTemplates);
@@ -56,6 +66,10 @@ public class OrderDataService {
             throw new IllegalArgumentException("Template name cannot be null or empty");
         }
         orderTemplateDao.deleteByTemplateName(templateName);
+    }
+
+    public List<Broker> getBrokerList() {
+        return orderDataDao.getActiveBrokers();
     }
 
     private void validateOrderTemplates(List<OrderTemplate> orderTemplates) {

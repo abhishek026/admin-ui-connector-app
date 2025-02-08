@@ -1,6 +1,7 @@
 package admin.ui.connector.Controller;
 
 import admin.ui.connector.business.OrderDataService;
+import admin.ui.connector.model.Broker;
 import admin.ui.connector.model.OrderPlacement;
 import admin.ui.connector.model.OrderTemplate;
 import admin.ui.connector.utills.ResponseUtil;
@@ -71,5 +72,11 @@ public class OrderDataController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error deleting template(s): " + e.getMessage());
         }
+    }
+
+    @GetMapping("/get-broker-list")
+    public ResponseEntity<?> getBrokerList() {
+        List<Broker>  brokers= orderDataService.getBrokerList();
+        return ResponseUtil.buildResponse(brokers);
     }
 }

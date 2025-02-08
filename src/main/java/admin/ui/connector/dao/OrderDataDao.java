@@ -96,7 +96,7 @@ public class OrderDataDao {
 
 
     public List<Broker> getActiveBrokers() {
-        String query = "SELECT * FROM brokers WHERE is_active = TRUE";
+        String query = "SELECT * FROM brokers WHERE is_active = TRUE order by account";
 
         return jdbcTemplate.query(query, new RowMapper<Broker>() {
             @Override
@@ -107,8 +107,7 @@ public class OrderDataDao {
                 broker.setDisplayName(rs.getString("display_name"));
                 broker.setAccount(rs.getString("account"));
                 broker.setBrokerUrl(rs.getString("broker_url"));
-                broker.setBrokerUsername(rs.getString("broker_username"));
-                broker.setBrokerPassword(rs.getString("broker_password"));
+                broker.setPublicToken(rs.getString("public_token"));
                 broker.setAccessToken(rs.getString("access_token"));
                 broker.setActive(rs.getBoolean("is_active"));
                 return broker;
