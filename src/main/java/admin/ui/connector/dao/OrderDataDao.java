@@ -3,6 +3,9 @@ package admin.ui.connector.dao;
 import admin.ui.connector.model.Broker;
 import admin.ui.connector.model.OrderData;
 import admin.ui.connector.model.OrderTemplate;
+import com.zerodhatech.kiteconnect.KiteConnect;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,42 +23,31 @@ import java.util.Map;
 @Repository
 public class OrderDataDao {
 
+    private final Logger logger = LogManager.getLogger(OrderDataDao.class);
+
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final String GET_EXPIRY_DATES_QUERY = """
-            SELECT DISTINCT expiry AS expiry_key,
-                                    CONCAT(
-                                        TO_CHAR(expiry, 'DD Mon'),
-                                        CASE
-                                            WHEN EXTRACT(YEAR FROM expiry) > EXTRACT(YEAR FROM CURRENT_DATE) THEN ' ' || EXTRACT(YEAR FROM expiry)
-                                            ELSE ''
-                                        END,
-                                        '(', expiry - CURRENT_DATE, ' days)'
-                                    ) AS expiry_value
-                                FROM order_data
-                                WHERE expiry IS NOT NULL
-                                  AND exchange = 'NFO'
-                                  AND name = 'NIFTY'
-                                  AND instrument_type IN ('CE', 'PE')
-                                  AND expiry >= CURRENT_DATE
-                                ORDER BY expiry ASC;
-            """;
+    private static final String GET_EXPIRY_DATES_QUERY = new StringBuilder()
+            .append("SELECT DISTINCT expiry AS expiry_key, CONCAT(TO_CHAR(expiry, 'DD Mon'), ")
+            .append("CASE WHEN EXTRACT(YEAR FROM expiry) > EXTRACT(YEAR FROM CURRENT_DATE) ")
+            .append("THEN ' ' || EXTRACT(YEAR FROM expiry) ELSE '' END, ")
+            .append("'(', expiry - CURRENT_DATE, ' days)') AS expiry_value FROM order_data ")
+            .append("WHERE expiry IS NOT NULL AND exchange = 'NFO' AND name = 'NIFTY' ")
+            .append("AND instrument_type IN ('CE', 'PE') AND expiry >= CURRENT_DATE ")
+            .append("ORDER BY expiry ASC;").toString();
 
-    private static final String GET_ORDER_DATA_BY_EXPIRY_QUERY = """
-            SELECT DISTINCT 
-                expiry AS expiry_key,
-                CONCAT(TO_CHAR(expiry, 'DD Mon'), '(', expiry - CURRENT_DATE, ' days)') AS expiry_value,
-                strike,
-                instrument_type AS inst_type,
-                lot_size AS lot,
-                exchange_token AS exchange_token,
-                tradingsymbol AS tradingsymbol,
-                instrument_token AS instrument_token,
-                exchange AS exchange
-            FROM order_data 
-            WHERE expiry = ? AND exchange = 'NFO' AND name = 'NIFTY' AND instrument_type IN ('CE', 'PE');
-            """;
+
+    private static final String GET_ORDER_DATA_BY_EXPIRY_QUERY = new StringBuilder()
+            .append("SELECT DISTINCT expiry AS expiry_key, ")
+            .append("CONCAT(TO_CHAR(expiry, 'DD Mon'), '(', expiry - CURRENT_DATE, ' days)') AS expiry_value, ")
+            .append("strike, instrument_type AS inst_type, lot_size AS lot, ")
+            .append("exchange_token, tradingsymbol, instrument_token, exchange ")
+            .append("FROM order_data WHERE expiry = ? AND exchange = 'NFO' ")
+            .append("AND name = 'NIFTY' AND instrument_type IN ('CE', 'PE');")
+            .toString();
+
 
     public Map<String, String> getExpiryDates() {
         Map<String, String> expiryDateMap = new LinkedHashMap<>();
@@ -147,6 +139,21 @@ public class OrderDataDao {
             }
         });
     }
+
+    public void updateBrokerTokens(KiteConnect kiteConnect, Long brokerId) {
+        String query = "UPDATE brokers " +
+                "SET api_key=? , user_id=? , public_token = ?, access_token = ?, updated_date = NOW() " +
+                "WHERE broker_id = ?";
+
+        int rowsAffected = jdbcTemplate.update(query, kiteConnect.getApiKey(), kiteConnect.getUserId(), kiteConnect.getPublicToken(), kiteConnect.getAccessToken(), brokerId);
+
+        if (rowsAffected > 0) {
+            logger.info("Successfully updated tokens for broker ID: {}", brokerId);
+        } else {
+            logger.warn("No broker found with ID: {}", brokerId);
+        }
+    }
+
 }
 
 

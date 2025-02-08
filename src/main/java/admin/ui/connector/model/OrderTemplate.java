@@ -1,13 +1,15 @@
 package admin.ui.connector.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 public class OrderTemplate {
@@ -30,6 +32,7 @@ public class OrderTemplate {
     private String templateName;
     private LocalDateTime createDate=LocalDateTime.now();
     private LocalDateTime modifiedDate=LocalDateTime.now();
+    private List<Long> brokers=new ArrayList<>();
     @JsonIgnore
     private Boolean active;
 

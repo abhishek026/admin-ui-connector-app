@@ -1,9 +1,8 @@
 package admin.ui.connector.utills;
 
+import admin.ui.connector.exception.SuccessResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import admin.ui.connector.exception.SuccessResponse;
 
 public interface ResponseUtil {
 	public static <T> ResponseEntity<SuccessResponse<T>> buildResponse(HttpStatus status, String message, T data) {
