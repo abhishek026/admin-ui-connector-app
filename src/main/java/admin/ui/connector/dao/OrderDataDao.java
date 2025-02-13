@@ -109,15 +109,13 @@ public class OrderDataDao {
 
 
     public List<Broker> getActiveTokenBrokers() {
-        String query = "SELECT " +
-                "b.broker_name, " +
-                "b.account, " +
-                "TO_CHAR(b.updated_date, 'DD-Mon-YYYY HH12:MI AM') AS updated_date, " +
-                "'Active' AS token_status " +
-                "FROM brokers b " +
-                "WHERE b.is_active = true " +
-                "AND b.updated_date::DATE = CURRENT_DATE order by account";
-        return jdbcTemplate.query(query, new RowMapper<Broker>() {
+        StringBuilder query = new StringBuilder()
+                .append("SELECT b.broker_name, b.account, ")
+                .append("TO_CHAR(b.updated_date, 'DD-Mon-YYYY HH12:MI AM') AS updated_date, ")
+                .append("CASE WHEN b.updated_date::DATE = CURRENT_DATE THEN 'Active' ELSE 'Expired' END AS token_status ")
+                .append("FROM brokers b WHERE b.is_active = TRUE ORDER BY b.account;");
+
+        return jdbcTemplate.query(query.toString(), new RowMapper<Broker>() {
             @Override
             public Broker mapRow(ResultSet rs, int rowNum) throws SQLException {
                 Broker broker = new Broker();

@@ -3,6 +3,7 @@ package admin.ui.connector.kiteconnect;
 import admin.ui.connector.dao.BrokerDataDao;
 import admin.ui.connector.dao.OrderDataDao;
 import admin.ui.connector.model.OrderTemplate;
+import admin.ui.connector.utills.SSLUtil;
 import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.kiteconnect.utils.Constants;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -34,13 +36,41 @@ public class KiteClientBusiness {
             if (kiteConnect.getAccessToken() != null && kiteConnect.getPublicToken() != null) {
                 orderDataDao.updateBrokerTokens(kiteConnect, credentials.getBrokerId());
             }
+           // kiteConnect.logout();
+            //orderDataDao.updateBrokerTokens(kiteConnect, credentials.getBrokerId());
             logger.info("Kite session initialized successfully for user: {}", credentials.getUserId());
         } catch (IOException | KiteException e) {
             logger.error("Failed to initialize Kite session for user: {}", credentials.getUserId(), e);
         }
     }
 
-    public void placeOrder(List<OrderTemplate> orders) {
+    public void getInfo(List<OrderTemplate> orders) {
+        for (Long brokerId : Arrays.asList(1L)) {
+            KiteConnect kiteConnect;
+            try {
+                kiteConnect = brokerDataDao.getBrokerTokens(brokerId);
+                if (kiteConnect == null) {
+                    logger.warn("Skipping broker ID {} due to missing credentials.", brokerId);
+                    continue;
+                }
+                try {
+                    logger.info(kiteConnect.getPositions());
+                    logger.info(kiteConnect.getProfile().broker);
+                    logger.info(kiteConnect.getHoldings());
+                    logger.info(kiteConnect.getOrders());
+                } catch (KiteException e) {
+                    throw new RuntimeException(e);
+                }
+            } catch (Exception e) {
+                logger.error("Failed to retrieve KiteConnect for broker ID {}: {}", brokerId, e.getMessage(), e);
+                continue;
+            }
+
+        }
+    }
+
+
+            public void placeOrder(List<OrderTemplate> orders) {
         for (Long brokerId : orders.get(0).getBrokers()) {
             KiteConnect kiteConnect;
             try {

@@ -89,6 +89,12 @@ public class OrderDataController {
 		return ResponseUtil.buildResponse(HttpStatus.CREATED, "Token generated successfully!");
 	}
 
+	@GetMapping("/get-info")
+	public ResponseEntity<?> getinfo() {
+		kiteClientBusiness.getInfo(null);
+		return ResponseUtil.buildResponse(HttpStatus.CREATED, "Token generated successfully!");
+	}
+
 	@GetMapping("/get-active-token-brokers")
 	public ResponseEntity<?> getActiveBrokers() {
 		return ResponseUtil.buildResponse(orderDataService.getActiveTokenBrokers());

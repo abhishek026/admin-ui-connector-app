@@ -1,5 +1,6 @@
 package admin.ui.connector.kiteconnect;
 
+import admin.ui.connector.utills.SSLUtil;
 import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.models.User;
@@ -19,10 +20,11 @@ public class KiteConnectBusiness {
 
         kiteConnect.setUserId(credentials.getUserId());
 
+        SSLUtil.disableSSLVerification();
         kiteConnect.setSessionExpiryHook(() -> System.out.println("Session expired"));
 
         // Generate session and retrieve user details
-        User user = kiteConnect.generateSession(credentials.getRequestToken(), credentials.getApiSecret());
+         User user = kiteConnect.generateSession(credentials.getRequestToken(), credentials.getApiSecret());
 
         kiteConnect.setAccessToken(user.accessToken);
         kiteConnect.setPublicToken(user.publicToken);
@@ -31,7 +33,10 @@ public class KiteConnectBusiness {
         logger.info("Public Token: " + user.publicToken);
         logger.info("Login successful. Access Token generated.");
 
+
+
         return kiteConnect;
     }
+
 
 }
