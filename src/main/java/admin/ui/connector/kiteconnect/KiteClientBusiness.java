@@ -1,21 +1,23 @@
 package admin.ui.connector.kiteconnect;
 
-import admin.ui.connector.dao.BrokerDataDao;
-import admin.ui.connector.dao.OrderDataDao;
-import admin.ui.connector.model.OrderTemplate;
-import admin.ui.connector.utills.SSLUtil;
-import com.zerodhatech.kiteconnect.KiteConnect;
-import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
-import com.zerodhatech.kiteconnect.utils.Constants;
-import com.zerodhatech.models.OrderParams;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import com.zerodhatech.kiteconnect.KiteConnect;
+import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
+import com.zerodhatech.kiteconnect.utils.Constants;
+import com.zerodhatech.models.OrderParams;
+
+import admin.ui.connector.dao.BrokerDataDao;
+import admin.ui.connector.dao.OrderDataDao;
+import admin.ui.connector.model.OrderTemplate;
 
 @Component
 public class KiteClientBusiness {
@@ -44,8 +46,9 @@ public class KiteClientBusiness {
         }
     }
 
-    public void getInfo(List<OrderTemplate> orders) {
-        for (Long brokerId : Arrays.asList(1L)) {
+    public Object getInfo(List<Long> orders) {
+    	Map<Long,Object> resMap=new HashMap<>();
+        for (Long brokerId : orders) {
             KiteConnect kiteConnect;
             try {
                 kiteConnect = brokerDataDao.getBrokerTokens(brokerId);
@@ -56,10 +59,12 @@ public class KiteClientBusiness {
                 try {
                     logger.info(kiteConnect.getPositions());
                     logger.info(kiteConnect.getProfile().broker);
+                    logger.info(kiteConnect.getProfile());
                     logger.info(kiteConnect.getHoldings());
                     logger.info(kiteConnect.getOrders());
+                    resMap.put(brokerId,kiteConnect.getProfile());
                 } catch (KiteException e) {
-                    throw new RuntimeException(e);
+                  //  throw new RuntimeException(e);
                 }
             } catch (Exception e) {
                 logger.error("Failed to retrieve KiteConnect for broker ID {}: {}", brokerId, e.getMessage(), e);
@@ -67,6 +72,7 @@ public class KiteClientBusiness {
             }
 
         }
+        return resMap;
     }
 
 
