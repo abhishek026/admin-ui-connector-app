@@ -1,7 +1,6 @@
 package admin.ui.connector.ticker;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +47,7 @@ public class ZerodhaTickerService {
 			if (!ticks.isEmpty()) {
 				Tick tick = ticks.get(0);
 				System.out.println("broadcastToWebSocketClients ::" + tick.getAverageTradePrice());
-				broadcastToWebSocketClients(accountId, tick);
+				broadcastToWebSocketClients(accountId, preparedResDataSet(tick,accountId));
 			}
 		});
 
@@ -61,6 +60,17 @@ public class ZerodhaTickerService {
 		}
 
 		tickerProvider.connect();
+	}
+
+	private Map<String,Object> preparedResDataSet(Tick tick, String accountId) {
+		Map<String,Object> resMap=new ConcurrentHashMap<String, Object>();
+		resMap.put("accountId", accountId);
+		resMap.put("qty", 10);
+		resMap.put("ltp", tick.getLastTradedPrice());
+		resMap.put("avg", tick.getAverageTradePrice());
+		resMap.put("pnl", tick.getOpenPrice());
+		resMap.put("instToken", tick.getInstrumentToken());
+		return resMap;
 	}
 
 	public void stopTickerForAccount(String accountId) {
@@ -85,12 +95,9 @@ public class ZerodhaTickerService {
 			}
 		}
 	}
-	private void broadcastToWebSocketClients(String accountId, Tick tick) {
+	private void broadcastToWebSocketClients(String accountId, Map<String, Object> response) {
 	    ObjectMapper objectMapper = new ObjectMapper();
 	    try {
-	    	Map<String, Object> response = new HashMap<>();
-	        response.put("accountId", accountId);
-	        response.put("tick", tick); // Add the Tick object
 	        String jsonResponse = objectMapper.writeValueAsString(response);
 	        Set<WebSocketSession> wsession = sessions.get(accountId);
 	        if (wsession != null) {
