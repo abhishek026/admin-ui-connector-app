@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import admin.ui.connector.model.BrokerPositions;
+import admin.ui.connector.model.*;
 import com.zerodhatech.models.Position;
 import com.zerodhatech.ticker.KiteTicker;
 import org.apache.logging.log4j.LogManager;
@@ -19,8 +19,6 @@ import com.zerodhatech.models.OrderParams;
 
 import admin.ui.connector.dao.BrokerDataDao;
 import admin.ui.connector.dao.OrderDataDao;
-import admin.ui.connector.model.OrderTemplate;
-import admin.ui.connector.model.PositionData;
 
 @Component
 public class KiteClientBusiness {
@@ -114,6 +112,47 @@ public class KiteClientBusiness {
         }
     }
 
+
+    public List<BrokerPositionsV2> getAllBrokerPositionsV2() {
+        List<BrokerPositionsV2> brokerPositionsList = brokerDataDao.getActiveTokenBrokersv2();
+
+        if (brokerPositionsList == null || brokerPositionsList.isEmpty()) {
+            logger.info("No active brokers found.");
+            return Collections.emptyList();
+        }
+
+        for (BrokerPositionsV2 broker : brokerPositionsList) {
+            KiteConnect kiteConnect = null;
+            try {
+                // Initialize KiteConnect for this broker
+                kiteConnect = new KiteConnect(broker.getApiKey());
+                kiteConnect.setAccessToken(broker.getAccessToken());
+                kiteConnect.setPublicToken(broker.getPublicToken());
+                kiteConnect.setUserId(broker.getUserId());
+
+                // Fetch positions
+                Map<String, List<Position>> positionsMap = kiteConnect.getPositions();
+
+                // Validate "net" and "day" exist and contain data
+                if (positionsMap == null || positionsMap.isEmpty() ||
+                        (isListEmpty(positionsMap.get("net")) && isListEmpty(positionsMap.get("day")))) {
+                    logger.info("No valid position data available for broker: {}", broker.getBrokerName());
+                    broker.setPositions(Collections.emptyList()); // Set empty list instead of null
+                    continue;
+                }
+
+                broker.setPositions(convertToPositionDataV2(positionsMap));
+                orderDataDao.updatePositionDataFromDBV2(broker.getPositions());
+                //kiteConnect.logout();
+
+            } catch (KiteException | IOException e) {
+                logger.error("Error fetching positions for broker {}: {}", broker.getBrokerName(), e.getMessage());
+                broker.setPositions(Collections.emptyList()); // Set empty list to avoid null issues
+            }
+        }
+        return brokerPositionsList;
+    }
+
     public List<BrokerPositions> getAllBrokerPositions() {
         List<BrokerPositions> brokerPositionsList = brokerDataDao.getActiveTokenBrokers();
 
@@ -133,10 +172,6 @@ public class KiteClientBusiness {
 
                 // Fetch positions
                 Map<String, List<Position>> positionsMap = kiteConnect.getPositions();
-              /*  String accessToken="";String apiKey="";
-                KiteTicker kiteTicker=new KiteTicker(accessToken,apiKey);
-                kiteTicker.connect()
-*/
                 // Validate "net" and "day" exist and contain data
                 if (positionsMap == null || positionsMap.isEmpty() ||
                         (isListEmpty(positionsMap.get("net")) && isListEmpty(positionsMap.get("day")))) {
@@ -171,6 +206,26 @@ public class KiteClientBusiness {
                 .filter(Objects::nonNull)
                 .map(pos -> {
                     PositionData positionData = new PositionData();
+                    positionData.setTradingSymbol(pos.tradingSymbol);
+                    positionData.setInstrumentToken(pos.instrumentToken);
+                    return positionData;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<PositionDataV2> convertToPositionDataV2(Map<String, List<Position>> positionsMap) {
+        if (positionsMap == null || positionsMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return positionsMap.entrySet().stream()
+                .filter(entry -> "net".equals(entry.getKey()) || "day".equals(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .map(pos -> {
+                    PositionDataV2 positionData = new PositionDataV2();
                     positionData.setTradingSymbol(pos.tradingSymbol);
                     positionData.setInstrumentToken(pos.instrumentToken);
                     return positionData;

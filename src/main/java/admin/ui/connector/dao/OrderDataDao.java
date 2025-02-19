@@ -65,6 +65,19 @@ public class OrderDataDao {
             .append(" Limit 1;")
             .toString();
 
+    private static final String GET_ORDER_DATA_BY_TRADING_SYMBOL_ALL_V2 = new StringBuilder()
+            .append("SELECT DISTINCT expiry AS expiry_key, ")
+            .append("CONCAT(TO_CHAR(expiry, 'DD Mon'), '(', expiry - CURRENT_DATE, ' days)') AS expiry_value, ")
+            .append("O_CHAR(expiry, 'DD Mon') AS exp,")
+            .append("strike, instrument_type AS inst_type, lot_size AS lot, ")
+            .append("exchange_token, tradingsymbol, instrument_token, exchange ")
+            .append("FROM order_data WHERE IN (:tradingSymbols) ")
+            .append(" Limit 1;")
+            .toString();
+
+
+
+
 
     public Map<String, String> getExpiryDates() {
         Map<String, String> expiryDateMap = new LinkedHashMap<>();
@@ -159,6 +172,45 @@ public class OrderDataDao {
                 positionData.setExpiryValue((String) row.get("expiry_value"));
                 positionData.setStrike(row.get("strike") != null ? ((Number) row.get("strike")).intValue() : 0);
                 positionData.setExchange((String) row.get("exchange"));
+            } else {
+                logger.warn("No matching order data found for trading symbol: {}", positionData.getTradingSymbol());
+            }
+        });
+    }
+
+
+    public void updatePositionDataFromDBV2(List<PositionDataV2> positionDataList) {
+        if (positionDataList == null || positionDataList.isEmpty()) {
+            logger.info("No positions to update from DB.");
+            return;
+        }
+
+        List<String> tradingSymbols = positionDataList.stream()
+                .map(PositionDataV2::getTradingSymbol)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (tradingSymbols.isEmpty()) {
+            logger.info("No valid trading symbols found.");
+            return;
+        }
+
+        Map<String, Object> params = Collections.singletonMap("symbols", tradingSymbols);
+        List<Map<String, Object>> orderDataList = jdbcTemplate.queryForList(GET_ORDER_DATA_BY_TRADING_SYMBOL_ALL_V2, params);
+
+        // Create a lookup map for quick access
+        Map<String, Map<String, Object>> orderDataMap = orderDataList.stream()
+                .collect(Collectors.toMap(row -> (String) row.get("tradingsymbol"), row -> row));
+
+        // Update positionData objects with DB values
+        positionDataList.forEach(positionData -> {
+            Map<String, Object> row = orderDataMap.get(positionData.getTradingSymbol());
+            if (row != null) {
+                positionData.setInstrumentToken((String) row.get("instrument_token"));
+                positionData.setExpiry((String) row.get("expiry_key"));
+                positionData.setExpiryValue((String) row.get("expiry_value"));
+                positionData.setExp((String) row.get("exp"));
+                positionData.setStrike(row.get("strike") != null ? ((Number) row.get("strike")).intValue() : 0);
             } else {
                 logger.warn("No matching order data found for trading symbol: {}", positionData.getTradingSymbol());
             }

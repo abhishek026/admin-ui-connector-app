@@ -6,6 +6,7 @@ import java.util.List;
 
 import admin.ui.connector.model.Broker;
 import admin.ui.connector.model.BrokerPositions;
+import admin.ui.connector.model.BrokerPositionsV2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,31 @@ public class BrokerDataDao {
             @Override
             public BrokerPositions mapRow(ResultSet rs, int rowNum) throws SQLException {
                 BrokerPositions broker = new BrokerPositions();
+                broker.setBrokerId(rs.getInt("broker_id"));
+                broker.setBrokerName(rs.getString("broker_name"));
+                broker.setAccount(rs.getString("account"));
+                broker.setApiKey(rs.getString("api_key"));
+                broker.setUserId(rs.getString("user_id"));
+                broker.setPublicToken(rs.getString("public_token"));
+                broker.setAccessToken(rs.getString("access_token"));
+                return broker;
+            }
+        });
+    }
+
+    public List<BrokerPositionsV2> getActiveTokenBrokersv2() {
+        StringBuilder query = new StringBuilder()
+                .append("SELECT b.broker_id, b.broker_name, b.account, b.api_key, ")
+                .append("b.user_id, b.public_token, b.access_token, ")
+                .append("TO_CHAR(b.updated_date, 'DD-Mon-YYYY HH12:MI AM') AS updated_date ")
+                .append("FROM brokers b ")
+                .append("WHERE b.is_active = TRUE AND b.updated_date::DATE = CURRENT_DATE ") // Only active brokers
+                .append("ORDER BY b.account;");
+
+        return jdbcTemplate.query(query.toString(), new RowMapper<BrokerPositionsV2>() {
+            @Override
+            public BrokerPositionsV2 mapRow(ResultSet rs, int rowNum) throws SQLException {
+                BrokerPositionsV2 broker = new BrokerPositionsV2();
                 broker.setBrokerId(rs.getInt("broker_id"));
                 broker.setBrokerName(rs.getString("broker_name"));
                 broker.setAccount(rs.getString("account"));
