@@ -22,4 +22,6 @@ public class Broker {
     private String status;
     @JsonIgnore
     private boolean isActive;
+    @JsonIgnore
+    private String apiKey;
 }

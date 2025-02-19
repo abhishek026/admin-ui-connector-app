@@ -16,6 +16,10 @@ public class PositionData {
     private String exchange;
     private String orderType = "MARKET";
     private String transactionType = "";
-
+    private double buyPrice;
+    private double sellPrice;
+    private int bQty;
+    private int sQty;
+    private int nQty;
 
 }

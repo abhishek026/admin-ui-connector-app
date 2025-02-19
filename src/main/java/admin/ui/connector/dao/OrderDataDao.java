@@ -187,6 +187,7 @@ public class OrderDataDao {
             }
         });
     }
+    
 
 
     public List<Broker> getALLTokenBrokers() {
@@ -257,7 +258,22 @@ public class OrderDataDao {
             logger.warn("No broker found with ID: {}", brokerId);
         }
     }
+    public List<Broker> FindByBrokerId(int broker_id) {
+        String query = "SELECT * FROM brokers WHERE is_active = TRUE and broker_id="+broker_id;
 
+        return jdbcTemplate.query(query, new RowMapper<Broker>() {
+            @Override
+            public Broker mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Broker broker = new Broker();
+                broker.setBrokerId(rs.getInt("broker_id"));
+                broker.setBrokerName(rs.getString("broker_name"));
+                broker.setBrokerName(rs.getString("display_name"));
+                broker.setAccessToken(rs.getString("access_token"));
+                broker.setApiKey(rs.getString("api_key"));
+                return broker;
+            }
+        });
+    }
 }
 
 
